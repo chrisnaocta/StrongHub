@@ -217,6 +217,9 @@ class _DashboardPageUserState extends State<DashboardPageUser> {
           ? AppBar(
               backgroundColor: redDark,
               centerTitle: true,
+              iconTheme: const IconThemeData(
+                color: grayLight, // 🔹 Warna garis tiga jadi hitam
+              ),
               title: Text(
                 "Selamat datang, ${userName ?? ''}",
                 style: const TextStyle(

@@ -138,7 +138,7 @@ class FirebaseRealtimeService {
         final user = entry.value as Map<String, dynamic>;
         if (user['email'] == email) {
           return {
-            'uid': entry.key, // contoh: uid_U_101
+            'uid': entry.key,
             'email': user['email'],
             'name': user['name'],
             'phone': user['phone'],
@@ -185,7 +185,7 @@ class FirebaseRealtimeService {
           }
         }
 
-        final newUid = 'uid_U_$nextNumber';
+        final newUid = 'uid_C_$nextNumber';
 
         // Hash password
         final hashedPassword = hashPassword(password);
@@ -251,14 +251,14 @@ class FirebaseRealtimeService {
         int nextNumber = 101; // default jika belum ada user
         if (data != null) {
           final userIds = data.keys
-              .where((k) => k.startsWith('uid_U_'))
+              .where((k) => k.startsWith('uid_C_'))
               .map((k) => int.tryParse(k.split('_').last) ?? 0)
               .toList();
           if (userIds.isNotEmpty) {
             nextNumber = userIds.reduce((a, b) => a > b ? a : b) + 1;
           }
         }
-        final newUid = 'uid_U_$nextNumber';
+        final newUid = 'uid_C_$nextNumber';
 
         // Hash password
         final hashedPassword = hashPassword(password);
@@ -368,543 +368,79 @@ class FirebaseRealtimeService {
     }
   }
 
-  // /// 🔹 Ambil semua data destinasi dari Firebase Realtime Database
-  // static Future<List<Map<String, dynamic>>> fetchDestinations() async {
-  //   final url = Uri.parse('$baseUrl/destinations.json');
-  //   final response = await http.get(url);
-
-  //   if (response.statusCode == 200) {
-  //     final Map<String, dynamic>? data = json.decode(response.body);
-  //     if (data == null) return [];
-  //     return data.entries.map((e) {
-  //       final value = e.value as Map<String, dynamic>;
-  //       return {
-  //         'id': e.key,
-  //         'name': value['name'] ?? 'Tanpa Nama',
-  //         'location': value['location'] ?? 'Tidak diketahui',
-  //         'description': value['description'] ?? '',
-  //         'price': value['price'] ?? 0,
-  //         'imageUrl': value['imageUrl'] ?? '',
-  //       };
-  //     }).toList();
-  //   } else {
-  //     throw Exception('Gagal memuat data destinasi');
-  //   }
-  // }
-
-  // /// 🔹 Ambil semua review dari Firebase
-  // static Future<List<Map<String, dynamic>>> fetchReviews(
-  //   String destinationId,
-  // ) async {
-  //   final url = Uri.parse('$baseUrl/reviews.json');
-  //   final response = await http.get(url);
-
-  //   if (response.statusCode == 200) {
-  //     final Map<String, dynamic>? data = json.decode(response.body);
-  //     if (data == null) return [];
-  //     final filtered = data.entries
-  //         .map((e) {
-  //           final value = e.value as Map<String, dynamic>;
-  //           return {
-  //             'id': e.key,
-  //             'comment': value['comment'] ?? '',
-  //             'createdAt': value['createdAt'] ?? '',
-  //             'destinationId': value['destinationId'] ?? '',
-  //             'rating': value['rating'] ?? 0,
-  //             'userId': value['userId'] ?? '',
-  //           };
-  //         })
-  //         .where((r) => r['destinationId'] == destinationId)
-  //         .toList();
-  //     return filtered;
-  //   } else {
-  //     throw Exception('Gagal memuat ulasan');
-  //   }
-  // }
-
-  // /// 🔹 Simpan destinasi ke tabel "saved_destinations"
-  // static Future<void> saveDestination(String userId, String destId) async {
-  //   final url = Uri.parse('$baseUrl/saved_destinations/$userId/$destId.json');
-  //   final response = await http.put(url, body: json.encode(true));
-
-  //   if (response.statusCode != 200) {
-  //     throw Exception('Gagal menyimpan destinasi');
-  //   }
-  // }
-
-  // /// 🔹 Hapus destinasi dari tabel "saved_destinations"
-  // static Future<void> removeSavedDestination(
-  //   String userId,
-  //   String destId,
-  // ) async {
-  //   final url = Uri.parse('$baseUrl/saved_destinations/$userId/$destId.json');
-  //   final response = await http.delete(url);
-
-  //   if (response.statusCode != 200) {
-  //     throw Exception('Gagal menghapus destinasi dari favorit');
-  //   }
-  // }
-
-  // /// 🔹 Cek apakah destinasi disimpan oleh user tertentu
-  // static Future<bool> isDestinationSaved(String userId, String destId) async {
-  //   final url = Uri.parse('$baseUrl/saved_destinations/$userId/$destId.json');
-  //   final response = await http.get(url);
-  //   if (response.statusCode == 200) {
-  //     final data = json.decode(response.body);
-  //     return data == true;
-  //   }
-  //   return false;
-  // }
-
-  // /// 🔹 Ambil daftar ID destinasi yang disimpan user
-  // static Future<List<String>> fetchSavedDestinations(String userId) async {
-  //   final url = Uri.parse('$baseUrl/saved_destinations/$userId.json');
-  //   final response = await http.get(url);
-
-  //   if (response.statusCode == 200) {
-  //     final Map<String, dynamic>? data = json.decode(response.body);
-  //     if (data == null) return [];
-  //     return data.keys.toList();
-  //   }
-  //   return [];
-  // }
-
-  // /// 🔹 Ambil review berdasarkan destinationId
-  // static Future<List<Map<String, dynamic>>> fetchReviewsByDestination(
-  //   String destId,
-  // ) async {
-  //   final url = Uri.parse('$baseUrl/reviews.json');
-  //   final response = await http.get(url);
-
-  //   if (response.statusCode == 200) {
-  //     final Map<String, dynamic>? data = json.decode(response.body);
-  //     if (data == null) return [];
-
-  //     return data.entries
-  //         .where((e) => e.value['destinationId'] == destId)
-  //         .map(
-  //           (e) => {
-  //             'id': e.key,
-  //             'rating': e.value['rating'] ?? 0,
-  //             'comment': e.value['comment'] ?? '',
-  //             'userId': e.value['userId'] ?? '',
-  //             'createdAt': e.value['createdAt'] ?? '',
-  //             'destinationId': e.value['destinationId'] ?? destId,
-  //           },
-  //         )
-  //         .toList();
-  //   }
-  //   return [];
-  // }
-
-  // /// 🔹 Ambil rating milik user tertentu pada destinasi tertentu
-  // static Future<double?> fetchUserRating(
-  //   String userId,
-  //   String destinationId,
-  // ) async {
-  //   final url = Uri.parse('$baseUrl/reviews.json');
-  //   final response = await http.get(url);
-
-  //   if (response.statusCode == 200) {
-  //     final Map<String, dynamic>? data = json.decode(response.body);
-  //     if (data == null) return null;
-
-  //     for (var entry in data.entries) {
-  //       final review = entry.value as Map<String, dynamic>;
-  //       if (review['userId'] == userId &&
-  //           review['destinationId'] == destinationId) {
-  //         final rating = (review['rating'] ?? 0).toDouble();
-  //         return rating;
-  //       }
-  //     }
-  //   }
-  //   return null; // belum pernah review
-  // }
-
-  // /// 🔹 Ambil review user berdasarkan bookingId
-  // static Future<Map<String, dynamic>?> fetchUserReviewByBookingId(
-  //   String userId,
-  //   String bookingId,
-  // ) async {
-  //   final url = Uri.parse('$baseUrl/reviews.json');
-  //   final response = await http.get(url);
-
-  //   if (response.statusCode == 200) {
-  //     final Map<String, dynamic>? data = json.decode(response.body);
-  //     if (data == null) return null;
-
-  //     for (var entry in data.entries) {
-  //       final review = entry.value as Map<String, dynamic>;
-  //       if (review['userId'] == userId && review['bookingId'] == bookingId) {
-  //         return {
-  //           'id': entry.key,
-  //           'destinationId': review['destinationId'],
-  //           'rating': (review['rating'] ?? 0).toDouble(),
-  //           'comment': review['comment'] ?? '',
-  //           'createdAt': review['createdAt'] ?? '',
-  //           'bookingId': review['bookingId'] ?? '',
-  //         };
-  //       }
-  //     }
-  //   }
-  //   return null; // belum pernah review booking ini
-  // }
-
-  // /// 🔹 Tambah booking baru
-  // static Future<bool> addBooking(Map<String, dynamic> bookingData) async {
-  //   try {
-  //     final response = await http.get(Uri.parse('$baseUrl/bookings.json'));
-  //     if (response.statusCode == 200) {
-  //       final Map<String, dynamic>? data = json.decode(response.body);
-
-  //       // Generate ID booking unik: book001, book002, ...
-  //       int nextNumber = 1;
-  //       if (data != null && data.isNotEmpty) {
-  //         final ids = data.keys
-  //             .where((k) => k.startsWith('book'))
-  //             .map((k) => int.tryParse(k.replaceAll('book', '')) ?? 0)
-  //             .toList();
-  //         if (ids.isNotEmpty)
-  //           nextNumber = ids.reduce((a, b) => a > b ? a : b) + 1;
-  //       }
-  //       final newId = 'book${nextNumber.toString().padLeft(3, '0')}';
-
-  //       final putResponse = await http.put(
-  //         Uri.parse('$baseUrl/bookings/$newId.json'),
-  //         body: json.encode(bookingData),
-  //       );
-
-  //       return putResponse.statusCode == 200;
-  //     }
-  //     return false;
-  //   } catch (e) {
-  //     print('❌ Error addBooking: $e');
-  //     return false;
-  //   }
-  // }
-
-  // /// 🔹 Hapus destinasi tersimpan user setelah dibayar
-  // static Future<bool> removeSavedDestinationAfterPayment({
-  //   required String userId,
-  //   required String destinationId,
-  // }) async {
-  //   try {
-  //     final url = Uri.parse(
-  //       '$baseUrl/saved_destinations/$userId/$destinationId.json',
-  //     );
-  //     final response = await http.delete(url);
-
-  //     if (response.statusCode == 200) {
-  //       print('✅ Destinasi $destinationId dihapus dari saved $userId');
-  //       return true;
-  //     } else {
-  //       print('❌ Gagal hapus destinasi: ${response.body}');
-  //       return false;
-  //     }
-  //   } catch (e) {
-  //     print('❌ Error removeSavedDestination: $e');
-  //     return false;
-  //   }
-  // }
-
-  // /// 🔹 Ambil booking berdasarkan userId lengkap dengan data destinasi
-  // static Future<List<Map<String, dynamic>>> fetchBookingsByUser(
-  //   String userId,
-  // ) async {
-  //   try {
-  //     // Ambil semua bookings
-  //     final bookingsResp = await http.get(Uri.parse('$baseUrl/bookings.json'));
-  //     final destinationsResp = await http.get(
-  //       Uri.parse('$baseUrl/destinations.json'),
-  //     );
-
-  //     if (bookingsResp.statusCode != 200 ||
-  //         destinationsResp.statusCode != 200) {
-  //       return [];
-  //     }
-
-  //     final Map<String, dynamic>? bookingsData = json.decode(bookingsResp.body);
-  //     final Map<String, dynamic>? destData = json.decode(destinationsResp.body);
-  //     if (bookingsData == null) return [];
-
-  //     final List<Map<String, dynamic>> result = [];
-
-  //     for (var entry in bookingsData.entries) {
-  //       final booking = entry.value as Map<String, dynamic>;
-  //       if (booking['userId'] == userId) {
-  //         final destId = booking['destinationId'];
-  //         final dest = destData?[destId] as Map<String, dynamic>?;
-
-  //         result.add({
-  //           'bookingId': entry.key,
-  //           'destinationId': destId,
-  //           'bookingDate': booking['bookingDate'],
-  //           'paymentTimeStamp': booking['paymentTimeStamp'],
-  //           'quantity': booking['quantity'],
-  //           'totalPrice': booking['totalPrice'],
-  //           'userId': booking['userId'],
-  //           // Data destinasi
-  //           'name': dest?['name'] ?? 'Tanpa Nama',
-  //           'location': dest?['location'] ?? 'Tidak diketahui',
-  //           'description': dest?['description'] ?? '',
-  //           'price': dest?['price'] ?? 0,
-  //           'imageUrl': dest?['imageUrl'] ?? '',
-  //         });
-  //       }
-  //     }
-
-  //     return result;
-  //   } catch (e) {
-  //     print('❌ Error fetchBookingsByUser: $e');
-  //     return [];
-  //   }
-  // }
-
-  // /// 🔹 Simpan review baru
-  // static Future<bool> addReview(Map<String, dynamic> reviewData) async {
-  //   try {
-  //     // Ambil semua review
-  //     final response = await http.get(Uri.parse('$baseUrl/reviews.json'));
-  //     final Map<String, dynamic>? data = response.statusCode == 200
-  //         ? json.decode(response.body)
-  //         : {};
-
-  //     // Generate ID review: rev001, rev002...
-  //     int nextNumber = 1;
-  //     if (data != null && data.isNotEmpty) {
-  //       final ids = data.keys
-  //           .where((k) => k.startsWith('rev'))
-  //           .map((k) => int.tryParse(k.replaceAll('rev', '')) ?? 0)
-  //           .toList();
-  //       if (ids.isNotEmpty)
-  //         nextNumber = ids.reduce((a, b) => a > b ? a : b) + 1;
-  //     }
-
-  //     final newId = 'rev${nextNumber.toString().padLeft(3, '0')}';
-
-  //     final putResp = await http.put(
-  //       Uri.parse('$baseUrl/reviews/$newId.json'),
-  //       body: json.encode(reviewData),
-  //     );
-
-  //     return putResp.statusCode == 200;
-  //   } catch (e) {
-  //     print('❌ Error addReview: $e');
-  //     return false;
-  //   }
-  // }
-
-  // /// 🔹 Ambil semua destinasi
-  // static Future<List<Map<String, dynamic>>> getAllDestinations() async {
-  //   try {
-  //     final response = await http.get(Uri.parse('$baseUrl/destinations.json'));
-
-  //     if (response.statusCode == 200) {
-  //       final data = json.decode(response.body) as Map<String, dynamic>?;
-
-  //       if (data == null) return [];
-
-  //       // Konversi menjadi list + sisipkan ID (key Firebase)
-  //       final List<Map<String, dynamic>> list = [];
-
-  //       data.forEach((key, value) {
-  //         final dest = Map<String, dynamic>.from(value);
-  //         dest["id"] = key;
-  //         list.add(dest);
-  //       });
-
-  //       return list;
-  //     } else {
-  //       print("❌ Gagal fetch destinations: ${response.body}");
-  //       return [];
-  //     }
-  //   } catch (e) {
-  //     print("❌ Error getAllDestinations: $e");
-  //     return [];
-  //   }
-  // }
-
-  // /// 🔹 Ambil semua users
-  // static Future<List<Map<String, dynamic>>> getAllUsers() async {
-  //   try {
-  //     final response = await http.get(Uri.parse('$baseUrl/users.json'));
-
-  //     if (response.statusCode == 200) {
-  //       final data = json.decode(response.body) as Map<String, dynamic>?;
-
-  //       if (data == null) return [];
-
-  //       final List<Map<String, dynamic>> list = [];
-
-  //       data.forEach((key, value) {
-  //         final user = value as Map<String, dynamic>;
-  //         user["id"] = key;
-  //         list.add(user);
-  //       });
-
-  //       return list;
-  //     } else {
-  //       print("❌ Gagal fetch users: ${response.body}");
-  //       return [];
-  //     }
-  //   } catch (e) {
-  //     print("❌ Error getAllUsers: $e");
-  //     return [];
-  //   }
-  // }
-
-  // /// 🔹 Ambil semua bookings
-  // static Future<List<Map<String, dynamic>>> getAllBookings() async {
-  //   try {
-  //     final response = await http.get(Uri.parse('$baseUrl/bookings.json'));
-
-  //     if (response.statusCode == 200) {
-  //       final data = json.decode(response.body) as Map<String, dynamic>?;
-
-  //       if (data == null) return [];
-
-  //       final List<Map<String, dynamic>> list = [];
-
-  //       data.forEach((key, value) {
-  //         final book = value as Map<String, dynamic>;
-  //         book["id"] = key;
-  //         list.add(book);
-  //       });
-
-  //       return list;
-  //     } else {
-  //       print("❌ Gagal fetch bookings: ${response.body}");
-  //       return [];
-  //     }
-  //   } catch (e) {
-  //     print("❌ Error getAllBookings: $e");
-  //     return [];
-  //   }
-  // }
-
-  // /// 🔹 Ambil semua reviews
-  // static Future<List<Map<String, dynamic>>> getAllReviews() async {
-  //   try {
-  //     final response = await http.get(Uri.parse('$baseUrl/reviews.json'));
-
-  //     if (response.statusCode == 200) {
-  //       final data = json.decode(response.body) as Map<String, dynamic>?;
-
-  //       if (data == null) return [];
-
-  //       final List<Map<String, dynamic>> list = [];
-
-  //       data.forEach((key, value) {
-  //         final review = value as Map<String, dynamic>;
-  //         review["id"] = key;
-  //         list.add(review);
-  //       });
-
-  //       return list;
-  //     } else {
-  //       print("❌ Gagal fetch reviews: ${response.body}");
-  //       return [];
-  //     }
-  //   } catch (e) {
-  //     print("❌ Error getAllReviews: $e");
-  //     return [];
-  //   }
-  // }
-
-  // /// 🔹 Tambah destinasi baru (return newId)
-  // static Future<String?> addDestination(Map<String, dynamic> data) async {
-  //   try {
-  //     final response = await http.get(Uri.parse('$baseUrl/destinations.json'));
-  //     final Map<String, dynamic>? result = response.statusCode == 200
-  //         ? json.decode(response.body)
-  //         : null;
-
-  //     int nextNumber = 1;
-
-  //     if (result != null && result.isNotEmpty) {
-  //       final numbers = result.keys
-  //           .where((k) => k.startsWith("dest"))
-  //           .map((k) => int.tryParse(k.replaceAll("dest", "")) ?? 0)
-  //           .toList();
-
-  //       if (numbers.isNotEmpty) {
-  //         nextNumber = numbers.reduce((a, b) => a > b ? a : b) + 1;
-  //       }
-  //     }
-
-  //     final newId = "dest${nextNumber.toString().padLeft(3, '0')}";
-
-  //     final putResponse = await http.put(
-  //       Uri.parse("$baseUrl/destinations/$newId.json"),
-  //       body: json.encode(data),
-  //     );
-
-  //     return putResponse.statusCode == 200 ? newId : null;
-  //   } catch (e) {
-  //     print("❌ Error addDestination: $e");
-  //     return null;
-  //   }
-  // }
-
-  // /// 🔹 Update destinasi
-  // static Future<bool> updateDestination(
-  //   String destinationId,
-  //   Map<String, dynamic> data,
-  // ) async {
-  //   try {
-  //     final response = await http.patch(
-  //       Uri.parse("$baseUrl/destinations/$destinationId.json"),
-  //       body: json.encode(data),
-  //     );
-
-  //     return response.statusCode == 200;
-  //   } catch (e) {
-  //     print("❌ Error updateDestination: $e");
-  //     return false;
-  //   }
-  // }
-
-  // /// 🔹 Hapus destinasi
-  // static Future<bool> deleteDestination(String destinationId) async {
-  //   try {
-  //     final response = await http.delete(
-  //       Uri.parse("$baseUrl/destinations/$destinationId.json"),
-  //     );
-
-  //     return response.statusCode == 200;
-  //   } catch (e) {
-  //     print("❌ Error deleteDestination: $e");
-  //     return false;
-  //   }
-  // }
-
-  // /// 🔹 Update user
-  // static Future<bool> updateUser(String id, Map<String, dynamic> data) async {
-  //   try {
-  //     // Jika "password" ada di data, hash dulu
-  //     if (data.containsKey("password")) {
-  //       data["password"] = hashPassword(data["password"]);
-  //     }
-
-  //     final url = Uri.parse('$baseUrl/users/$id.json');
-  //     final response = await http.patch(url, body: json.encode(data));
-
-  //     return response.statusCode == 200;
-  //   } catch (e) {
-  //     print("❌ Error updateUser: $e");
-  //     return false;
-  //   }
-  // }
-
-  // /// 🔹 Delete user
-  // static Future<bool> deleteUser(String id) async {
-  //   try {
-  //     final response = await http.delete(Uri.parse('$baseUrl/users/$id.json'));
-
-  //     return response.statusCode == 200;
-  //   } catch (e) {
-  //     print("❌ Error deleteUser: $e");
-  //     return false;
-  //   }
-  // }
+  /// 🔹 Ambil semua membership types
+  static Future<List<Map<String, dynamic>>> fetchMembershipTypes() async {
+    final url = Uri.parse('$baseUrl/membership_types.json');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic>? data = json.decode(response.body);
+      if (data == null) return [];
+
+      return data.entries.map((e) {
+        final value = e.value as Map<String, dynamic>;
+        return {
+          'id': e.key,
+          'name': value['name'],
+          'benefits': value['benefits'],
+          'durationDays': value['durationDays'],
+          'price': value['price'],
+        };
+      }).toList();
+    } else {
+      throw Exception("Gagal memuat membership types");
+    }
+  }
+
+  /// 🔹 Order membership baru dengan orderId otomatis
+  static Future<bool> orderMembership({
+    required String userId,
+    required String membershipType,
+    required int price,
+    required String activatedAtCustom,
+  }) async {
+    try {
+      final getUrl = Uri.parse("$baseUrl/memberships.json");
+
+      // 1. Ambil semua membership
+      final getResponse = await http.get(getUrl);
+      Map<String, dynamic> existing = {};
+
+      if (getResponse.statusCode == 200 && getResponse.body != "null") {
+        existing = json.decode(getResponse.body);
+      }
+
+      // 2. Generate order ID
+      int count = existing.length + 1;
+      String newOrderId = "order${count.toString().padLeft(3, '0')}";
+
+      // 3. Format expiredAt = +1 tahun
+      final now = DateTime.now();
+      final dateParsed = DateTime.parse(activatedAtCustom.replaceAll(" ", "T"));
+      final expiredAt = DateTime(
+        dateParsed.year + 1,
+        dateParsed.month,
+        dateParsed.day,
+      );
+
+      final data = {
+        "userId": userId,
+        "membershipType": membershipType,
+        "price": price,
+        "orderDate": now.toIso8601String().substring(0, 10),
+        "activatedAt": activatedAtCustom,
+        "expiredAt":
+            "${expiredAt.year}-${expiredAt.month.toString().padLeft(2, '0')}-${expiredAt.day.toString().padLeft(2, '0')}",
+        "status": "active",
+      };
+
+      final putUrl = Uri.parse("$baseUrl/memberships/$newOrderId.json");
+      final putResponse = await http.put(putUrl, body: json.encode(data));
+
+      return putResponse.statusCode == 200;
+    } catch (e) {
+      print("ERROR orderMembership: $e");
+      return false;
+    }
+  }
 }
