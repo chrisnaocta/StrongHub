@@ -414,14 +414,25 @@ class FirebaseRealtimeService {
       int count = existing.length + 1;
       String newOrderId = "order${count.toString().padLeft(3, '0')}";
 
-      // 3. Format expiredAt = +1 tahun
-      final now = DateTime.now();
+      // 3. Parse activatedAtCustom menjadi DateTime
       final dateParsed = DateTime.parse(activatedAtCustom.replaceAll(" ", "T"));
-      final expiredAt = DateTime(
+
+      // 4. expiredAt = +1 tahun (sama jam/menit/detik)
+      final expiredDate = DateTime(
         dateParsed.year + 1,
         dateParsed.month,
         dateParsed.day,
+        dateParsed.hour,
+        dateParsed.minute,
+        dateParsed.second,
       );
+
+      // Format expired date (YYYY-MM-DD HH:mm:ss)
+      final expiredFormatted =
+          "${expiredDate.year}-${expiredDate.month.toString().padLeft(2, '0')}-${expiredDate.day.toString().padLeft(2, '0')} "
+          "${expiredDate.hour.toString().padLeft(2, '0')}:${expiredDate.minute.toString().padLeft(2, '0')}:${expiredDate.second.toString().padLeft(2, '0')}";
+
+      final now = DateTime.now();
 
       final data = {
         "userId": userId,
@@ -429,8 +440,7 @@ class FirebaseRealtimeService {
         "price": price,
         "orderDate": now.toIso8601String().substring(0, 10),
         "activatedAt": activatedAtCustom,
-        "expiredAt":
-            "${expiredAt.year}-${expiredAt.month.toString().padLeft(2, '0')}-${expiredAt.day.toString().padLeft(2, '0')}",
+        "expiredAt": expiredFormatted,
         "status": "active",
       };
 
@@ -441,6 +451,39 @@ class FirebaseRealtimeService {
     } catch (e) {
       print("ERROR orderMembership: $e");
       return false;
+    }
+  }
+
+  /// 🔹 Ambil membership aktif milik user
+  static Future<Map<String, dynamic>?> getActiveMembershipByUser(
+    String userId,
+  ) async {
+    try {
+      final url = Uri.parse("$baseUrl/memberships.json");
+      final res = await http.get(url);
+
+      if (res.statusCode != 200) return null;
+
+      final Map<String, dynamic>? data = json.decode(res.body);
+      if (data == null) return null;
+
+      for (var entry in data.entries) {
+        final m = entry.value;
+        if (m['userId'] == userId && m['status'] == "active") {
+          return {
+            "orderId": entry.key,
+            "membershipType": m["membershipType"],
+            "activatedAt": m["activatedAt"],
+            "expiredAt": m["expiredAt"],
+            "price": m["price"],
+            "orderDate": m["orderDate"],
+          };
+        }
+      }
+      return null;
+    } catch (e) {
+      print("❌ ERROR getActiveMembershipByUser: $e");
+      return null;
     }
   }
 }

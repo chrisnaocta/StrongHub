@@ -60,7 +60,7 @@ class _MembershipsPageUserState extends State<MembershipsPageUser> {
     final format = NumberFormat.currency(
       locale: 'id_ID',
       symbol: 'Rp ',
-      decimalDigits: 2,
+      decimalDigits: 0,
     );
     return format.format(price);
   }
