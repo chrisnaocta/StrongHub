@@ -19,6 +19,7 @@ class _RegisterPageUserState extends State<RegisterPageUser> {
   bool _obscureText = true;
   String _message = '';
   bool isLoading = false;
+  String selectedGender = ""; // default
 
   /// 🔹 Validasi input sebelum dikirim ke Firebase
   bool _validateInput({
@@ -26,6 +27,7 @@ class _RegisterPageUserState extends State<RegisterPageUser> {
     required String email,
     required String phone,
     required String password,
+    required String gender,
   }) {
     if (name.isEmpty || email.isEmpty || phone.isEmpty || password.isEmpty) {
       setState(() => _message = "❌ Semua kolom wajib diisi.");
@@ -62,6 +64,7 @@ class _RegisterPageUserState extends State<RegisterPageUser> {
       email: email,
       phone: phone,
       password: password,
+      gender: selectedGender,
     )) {
       return;
     }
@@ -77,6 +80,7 @@ class _RegisterPageUserState extends State<RegisterPageUser> {
       email: email,
       phone: phone,
       password: password,
+      gender: selectedGender,
     );
 
     setState(() => isLoading = false);
@@ -184,6 +188,39 @@ class _RegisterPageUserState extends State<RegisterPageUser> {
                             fillColor: Colors.white.withOpacity(0.9),
                           ),
                         ),
+                        const SizedBox(height: 16),
+                        // 🔹 Gender (Male / Female)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                              children: [
+                                Radio<String>(
+                                  value: "Pria",
+                                  groupValue: selectedGender,
+                                  onChanged: (value) {
+                                    setState(() => selectedGender = value!);
+                                  },
+                                ),
+                                const Text("Pria"),
+                              ],
+                            ),
+                            const SizedBox(width: 20),
+                            Row(
+                              children: [
+                                Radio<String>(
+                                  value: "Wanita",
+                                  groupValue: selectedGender,
+                                  onChanged: (value) {
+                                    setState(() => selectedGender = value!);
+                                  },
+                                ),
+                                const Text("Wanita"),
+                              ],
+                            ),
+                          ],
+                        ),
+
                         const SizedBox(height: 16),
 
                         // 🔹 Input Nomor Telepon

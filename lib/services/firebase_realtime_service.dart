@@ -155,6 +155,7 @@ class FirebaseRealtimeService {
     required String email,
     required String password,
     required String phone,
+    required String gender,
   }) async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/users.json'));
@@ -194,6 +195,7 @@ class FirebaseRealtimeService {
         final newUser = {
           "name": name,
           "email": email,
+          "gender": gender,
           "password": hashedPassword,
           "phone": phone,
           "role": "customer",
@@ -219,79 +221,6 @@ class FirebaseRealtimeService {
     } catch (e) {
       print('❌ Error registerUser: $e');
       return null;
-    }
-  }
-
-  /// /// 🔹 Menambah USER sebagai ADMIN
-  static Future<bool> registerUserasAdmin({
-    required String name,
-    required String email,
-    required String password,
-    required String phone,
-  }) async {
-    try {
-      // Ambil semua user
-      final response = await http.get(Uri.parse('$baseUrl/users.json'));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body) as Map<String, dynamic>?;
-
-        // Cek email sudah ada
-        if (data != null) {
-          for (var user in data.values) {
-            final u = user as Map<String, dynamic>;
-            if (u['email'] == email) {
-              print('❌ Email sudah digunakan');
-              return false;
-            }
-          }
-        }
-
-        // Generate UID berdasarkan role 'user'
-        int nextNumber = 101; // default jika belum ada user
-        if (data != null) {
-          final userIds = data.keys
-              .where((k) => k.startsWith('uid_C_'))
-              .map((k) => int.tryParse(k.split('_').last) ?? 0)
-              .toList();
-          if (userIds.isNotEmpty) {
-            nextNumber = userIds.reduce((a, b) => a > b ? a : b) + 1;
-          }
-        }
-        final newUid = 'uid_C_$nextNumber';
-
-        // Hash password
-        final hashedPassword = hashPassword(password);
-
-        // Data user baru
-        final newUser = {
-          "name": name,
-          "email": email,
-          "password": hashedPassword,
-          "phone": phone,
-          "role": "user",
-          "createdAt": DateTime.now().toString().split(' ')[0],
-        };
-
-        // Simpan ke Firebase
-        final putResponse = await http.patch(
-          Uri.parse('$baseUrl/users/$newUid.json'),
-          body: json.encode(newUser),
-        );
-
-        if (putResponse.statusCode == 200) {
-          print('✅ Register berhasil dengan UID $newUid');
-          return true;
-        } else {
-          print('❌ Gagal simpan user: ${putResponse.body}');
-          return false;
-        }
-      }
-
-      return false;
-    } catch (e) {
-      print('❌ Error registerUser: $e');
-      return false;
     }
   }
 
@@ -585,6 +514,7 @@ class FirebaseRealtimeService {
           'status': value['status'],
           'activatedAt': value['activatedAt'] ?? '',
           'expiredAt': value['expiredAt'] ?? '',
+          'cancelledAt': value['cancelledAt'] ?? '',
         };
       }).toList();
     } else {
