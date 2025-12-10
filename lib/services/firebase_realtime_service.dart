@@ -619,4 +619,78 @@ class FirebaseRealtimeService {
 
     return putResponse.statusCode == 200;
   }
+
+  /// 🔹 Ambil semua berita
+  static Future<List<Map<String, dynamic>>> fetchAllNews() async {
+    final url = Uri.parse('$baseUrl/news.json');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic>? data = json.decode(response.body);
+      if (data == null) return [];
+
+      return data.entries.map((e) {
+        final value = e.value as Map<String, dynamic>;
+        return {
+          'id': e.key,
+          'title': value['title'],
+          'content': value['content'],
+          'createdAt': value['createdAt'],
+          'createdBy': value['createdBy'],
+        };
+      }).toList()..sort(
+        (a, b) => b['createdAt'].compareTo(a['createdAt']),
+      ); // terbaru di atas
+    } else {
+      throw Exception("Gagal memuat news");
+    }
+  }
+
+  /// 🔹 Tambah berita baru dengan uid format news001, news002, dst.
+  static Future<bool> addNewsWithId({
+    required String title,
+    required String content,
+    required String createdBy,
+  }) async {
+    // Ambil semua news untuk menghitung ID berikutnya
+    final allNews = await fetchAllNews();
+    int nextIndex = allNews.length + 1;
+    final newsId = 'news${nextIndex.toString().padLeft(3, '0')}';
+
+    final now = DateTime.now();
+    final createdAt =
+        "${now.toIso8601String().split('T')[0]} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}";
+
+    final newsData = {
+      'title': title,
+      'content': content,
+      'createdAt': createdAt,
+      'createdBy': createdBy,
+    };
+
+    final url = Uri.parse('$baseUrl/news/$newsId.json');
+    final response = await http.put(url, body: json.encode(newsData));
+
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  /// 🔹 Ambil UID admin berdasarkan email
+  static Future<String?> fetchAdminUidByEmail(String email) async {
+    final url = Uri.parse('$baseUrl/users.json');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic>? data = json.decode(response.body);
+      if (data == null) return null;
+
+      final admin = data.entries.firstWhere(
+        (e) => e.value['email'] == email && e.value['role'] == 'admin',
+        orElse: () => MapEntry('', {}),
+      );
+      if (admin.key.isEmpty) return null;
+      return admin.key;
+    } else {
+      throw Exception("Gagal memuat users");
+    }
+  }
 }
