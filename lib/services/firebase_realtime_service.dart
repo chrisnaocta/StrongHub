@@ -486,4 +486,137 @@ class FirebaseRealtimeService {
       return null;
     }
   }
+
+  /// 🔹 Ambil semua users
+  static Future<List<Map<String, dynamic>>> fetchAllUsers() async {
+    final url = Uri.parse('$baseUrl/users.json');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic>? data = json.decode(response.body);
+      if (data == null) return [];
+
+      return data.entries
+          .where((e) => e.key.startsWith('uid_C_')) // hanya customer
+          .map((e) {
+            final value = e.value as Map<String, dynamic>;
+            return {
+              'uid': e.key,
+              'name': value['name'],
+              'email': value['email'],
+              'phone': value['phone'],
+              'role': value['role'],
+            };
+          })
+          .toList();
+    } else {
+      throw Exception("Gagal memuat users");
+    }
+  }
+
+  /// 🔹 Ambil jumlah membership customer berdasarkan status
+  /// users: daftar semua users dari tabel 'users'
+  static Future<Map<String, int>> fetchMembershipStats(
+    List<Map<String, dynamic>> users,
+  ) async {
+    final url = Uri.parse('$baseUrl/memberships.json');
+    final response = await http.get(url);
+
+    if (response.statusCode != 200) throw Exception("Gagal memuat memberships");
+
+    final Map<String, dynamic>? data = json.decode(response.body);
+    if (data == null) {
+      // Semua users belum aktif
+      return {
+        'active': 0,
+        'inactive': users.where((u) => u['role'] == 'customer').length,
+      };
+    }
+
+    int active = 0;
+    final activeUserIds = <String>{};
+
+    data.forEach((key, value) {
+      final Map<String, dynamic> m = value as Map<String, dynamic>;
+      if (m['status'] == 'active') {
+        active++;
+        activeUserIds.add(m['userId']);
+      }
+    });
+
+    // Hitung inactive sebagai customer yang tidak punya membership aktif
+    final inactive = users
+        .where(
+          (u) => u['role'] == 'customer' && !activeUserIds.contains(u['uid']),
+        )
+        .length;
+
+    return {'active': active, 'inactive': inactive};
+  }
+
+  /// 🔹 Ambil jumlah berita
+  static Future<int> fetchNewsCount() async {
+    final url = Uri.parse('$baseUrl/news.json');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic>? data = json.decode(response.body);
+      return data?.length ?? 0;
+    } else {
+      throw Exception("Gagal memuat news");
+    }
+  }
+
+  /// 🔹 Ambil semua memberships customer
+  static Future<List<Map<String, dynamic>>> fetchAllMemberships() async {
+    final url = Uri.parse('$baseUrl/memberships.json');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic>? data = json.decode(response.body);
+      if (data == null) return [];
+
+      return data.entries.map((e) {
+        final value = e.value as Map<String, dynamic>;
+        return {
+          'orderId': e.key,
+          'userId': value['userId'],
+          'membershipType': value['membershipType'],
+          'status': value['status'],
+          'activatedAt': value['activatedAt'] ?? '',
+          'expiredAt': value['expiredAt'] ?? '',
+        };
+      }).toList();
+    } else {
+      throw Exception("Gagal memuat memberships");
+    }
+  }
+
+  /// 🔹 Batalkan membership berdasarkan orderId
+  static Future<bool> cancelMembership(String orderId) async {
+    final now = DateTime.now();
+    final cancelledAt =
+        "${now.year.toString().padLeft(4, '0')}-"
+        "${now.month.toString().padLeft(2, '0')}-"
+        "${now.day.toString().padLeft(2, '0')} "
+        "${now.hour.toString().padLeft(2, '0')}:"
+        "${now.minute.toString().padLeft(2, '0')}:"
+        "${now.second.toString().padLeft(2, '0')}";
+
+    final url = Uri.parse('$baseUrl/memberships/$orderId.json');
+
+    // Ambil data membership dulu
+    final getResponse = await http.get(url);
+    if (getResponse.statusCode != 200) return false;
+
+    final Map<String, dynamic> membershipData = json.decode(getResponse.body);
+    membershipData['status'] = 'cancelled';
+    membershipData['cancelledAt'] = cancelledAt;
+    membershipData['membershipType'] = '-';
+
+    // Update seluruh data membership
+    final putResponse = await http.put(url, body: json.encode(membershipData));
+
+    return putResponse.statusCode == 200;
+  }
 }
